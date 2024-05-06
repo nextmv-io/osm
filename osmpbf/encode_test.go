@@ -96,13 +96,9 @@ func nodeEquals(en, node *osm.Node) error {
 	if node.ChangesetID != en.ChangesetID {
 		return fmt.Errorf("node changeset id mismatch: %d != %d", node.ChangesetID, en.ChangesetID)
 	}
-	// TODO: this currently fails with
-	// "node timestamp mismatch: 2224-09-20 11:45:12.871345152 +0000 UTC !=
-	// 2009-05-20 10:28:54 +0000 UTC"
-	// The other timestamps (for ways and relations) work fine.
-	// if node.Timestamp != en.Timestamp {
-	// 	return fmt.Errorf("node timestamp mismatch: %s != %s", node.Timestamp, en.Timestamp)
-	// }
+	if node.Timestamp != en.Timestamp {
+		return fmt.Errorf("node timestamp mismatch: %s != %s", node.Timestamp, en.Timestamp)
+	}
 	if len(node.Tags) != len(en.Tags) {
 		return fmt.Errorf("node tags length mismatch: %d != %d", len(node.Tags), len(en.Tags))
 	}

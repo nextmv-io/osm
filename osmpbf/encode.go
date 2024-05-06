@@ -264,9 +264,15 @@ func EncodeDenseNode(block *osmpbf.PrimitiveBlock, reverseStringTable map[string
 	if groupDense.Denseinfo != nil {
 		groupDense.Denseinfo.Changeset = append(groupDense.Denseinfo.Changeset, int64(current.ChangesetID-previous.ChangesetID))
 		dateGranularity := block.GetDateGranularity()
-		currentTimeStamp := EncodeTimestamp(current.Timestamp, dateGranularity)
-		previousTimeStamp := EncodeTimestamp(previous.Timestamp, dateGranularity)
-		groupDense.Denseinfo.Timestamp = append(groupDense.Denseinfo.Timestamp, currentTimeStamp-previousTimeStamp)
+		if !current.Timestamp.IsZero() {
+			currentTimeStamp := EncodeTimestamp(current.Timestamp, dateGranularity)
+			if !previous.Timestamp.IsZero() {
+				previousTimeStamp := EncodeTimestamp(previous.Timestamp, dateGranularity)
+				groupDense.Denseinfo.Timestamp = append(groupDense.Denseinfo.Timestamp, currentTimeStamp-previousTimeStamp)
+			} else {
+				groupDense.Denseinfo.Timestamp = append(groupDense.Denseinfo.Timestamp, currentTimeStamp)
+			}
+		}
 		groupDense.Denseinfo.Uid = append(groupDense.Denseinfo.Uid, int32(current.UserID-previous.UserID))
 		groupDense.Denseinfo.Version = append(groupDense.Denseinfo.Version, int32(current.Version-previous.Version))
 		var previousUserNameId int32 = 0
@@ -418,7 +424,11 @@ func EncodeLatLon(value float64, offset int64, granularity int32) int64 {
 }
 
 func EncodeTimestamp(timestamp time.Time, dateGranularity int32) int64 {
-	return timestamp.UnixMilli() / int64(dateGranularity)
+	ts := timestamp.UnixMilli() / int64(dateGranularity)
+	if ts < 0 {
+		return 0
+	}
+	return ts
 }
 
 func EncodeString(block *osmpbf.PrimitiveBlock, reverseStringTable map[string]int, value string) int32 {
